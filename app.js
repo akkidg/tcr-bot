@@ -87,14 +87,14 @@ const
 
   var menuImages = [
     SERVER_URL + "/assets/images/menu1/menu11.jpg",
-    SERVER_URL + "/assets/images/menu2/menu2.jpg",
-    SERVER_URL + "/assets/images/menu3/menu3.jpg",
-    SERVER_URL + "/assets/images/menu4/menu4.jpg",
-    SERVER_URL + "/assets/images/menu5/menu5.jpg",
-    SERVER_URL + "/assets/images/menu6/menu6.jpg",
-    SERVER_URL + "/assets/images/menu7/menu7.jpg",
-    SERVER_URL + "/assets/images/menu9/menu9.jpg",
-    SERVER_URL + "/assets/images/menu9/menu9.jpg"
+    SERVER_URL + "/assets/images/menu2/menu21.jpg",
+    SERVER_URL + "/assets/images/menu3/menu31.jpg",
+    SERVER_URL + "/assets/images/menu4/menu41.jpg",
+    SERVER_URL + "/assets/images/menu5/menu51.jpg",
+    SERVER_URL + "/assets/images/menu6/menu61.jpg",
+    SERVER_URL + "/assets/images/menu7/menu71.jpg",
+    SERVER_URL + "/assets/images/menu8/menu81.jpg",
+    SERVER_URL + "/assets/images/menu9/menu91.jpg"
   ];
 
   /*var items = {
@@ -785,7 +785,7 @@ function sendWelcomeMessage(recipientId) {
           elements:[
              {
               title:"Welcome to The Chocolate Room",
-              image_url:SERVER_URL + "/assets/images/chillis.jpg",
+              image_url:SERVER_URL + "/assets/images/tcr.jpg",
               subtitle:"Try Desserts and Bakes",              
               buttons:[
                 {
