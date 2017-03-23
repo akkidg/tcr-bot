@@ -633,7 +633,7 @@ function receivedPostback(event) {
           getUserInfo(senderID,function(){
             if(firstName != ""){              
 
-              var greetText = "Hello " + firstName + ", Welcome to Chili's Bar & Cafe"
+              var greetText = "Hello " + firstName + ", Welcome to The Chocolate Room"
 
               showTextTemplate(senderID,greetText);
               setTimeout(function(){
