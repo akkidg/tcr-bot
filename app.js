@@ -85,7 +85,19 @@ const
     "Jay Aher\nThe chocolate just melts in the mouth...just a chocolicious experience...couldn't ask for more...keep going...loved it...just meant for chocolate lovers❤❤"  
   ];
 
-  var items = {
+  var menuImages = [
+    {"image_url":SERVER_URL + "/assets/images/menu1/menu1.jpg"},
+    {"image_url":SERVER_URL + "/assets/images/menu2/menu2.jpg"},
+    {"image_url":SERVER_URL + "/assets/images/menu3/menu3.jpg"},
+    {"image_url":SERVER_URL + "/assets/images/menu4/menu4.jpg"},
+    {"image_url":SERVER_URL + "/assets/images/menu5/menu5.jpg"},
+    {"image_url":SERVER_URL + "/assets/images/menu6/menu6.jpg"},
+    {"image_url":SERVER_URL + "/assets/images/menu7/menu7.jpg"},
+    {"image_url":SERVER_URL + "/assets/images/menu9/menu9.jpg"},
+    {"image_url":SERVER_URL + "/assets/images/menu9/menu9.jpg"}
+  ];
+
+  /*var items = {
     "italian":[
     {"title":"Classic","image_url":SERVER_URL + "/assets/images/food11/food11.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
     {"title":"Mint","image_url":SERVER_URL + "/assets/images/food11/food12.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
@@ -181,7 +193,7 @@ const
     {"title":"Tcr's coffee","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
     {"title":"Iced Caramel Macchiato","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
     ]
-  }
+  }*/
 
   var serviceHighlights = "Our Service Highlights\n- Home Delivery\n- Full Bar Available\n- Live Music\n- Smoking Area\n- Wifi\n- Live Sports Screening\n- Valet Parking Available\n- Featured in Collection\n- Happy hours";
   var testimonials = "Awesome restaurant and great food with warm service!\nCuisines\nDesserts, Cafe, Fast Food";
@@ -621,11 +633,11 @@ function receivedPostback(event) {
           getUserInfo(senderID,function(){
             if(firstName != ""){              
 
-              var greetText = "Hello " + user.firstName + ", Welcome to Chili's Bar & Cafe"
+              var greetText = "Hello " + firstName + ", Welcome to Chili's Bar & Cafe"
 
-              showTextTemplate(user.fbId,greetText);
+              showTextTemplate(senderID,greetText);
               setTimeout(function(){
-                sendWelcomeMessage(user.fbId);
+                sendWelcomeMessage(senderID);
               },delayMills);
             }else{
                sendWelcomeMessage(senderID); 
@@ -646,43 +658,39 @@ function receivedPostback(event) {
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_ITALIAN':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"italian");
+          sendImageMessage(senderID,menuImages[0]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCSHAKES':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"chocshakes");
+          sendImageMessage(senderID,menuImages[1]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCTAILS':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"choctails");
+          sendImageMessage(senderID,menuImages[2]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_COFFEE':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"coffee");
+          sendImageMessage(senderID,menuImages[3);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MOCKTAILS':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"mocktails");
+          sendImageMessage(senderID,menuImages[4]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_SAVOURIES':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"savouries");
+          sendImageMessage(senderID,menuImages[5]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCIZZA':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"chocizza");
+          sendImageMessage(senderID,menuImages[6]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_SUNDAES':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"sundaes");
+          sendImageMessage(senderID,menuImages[7]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_FONDUE':
           sendTypingOn(senderID);
-          showItemTemplate(senderID,"fondue");
-        break;
-        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_FROZEN':
-          sendTypingOn(senderID);
-          showItemTemplate(senderID,"frozen");
+          sendImageMessage(senderID,menuImages[8]);
         break;
         default:
         sendTypingOn(senderID);
@@ -820,8 +828,8 @@ function sendMainMenu(recipientId){
           template_type: "generic",
           elements: [{
             title: "Italian Hot Chocolates",
-            subtitle: "Tasty Crispy Food",               
-            image_url: SERVER_URL + "/assets/images/food/food.jpg",
+            subtitle: "Enjoy Hot Chocolates",               
+            image_url: SERVER_URL + "/assets/images/menu1/menu1.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_ITALIAN",
@@ -837,8 +845,8 @@ function sendMainMenu(recipientId){
             }]
           },{
             title: "Chocshakes",
-            subtitle: "Chilled Drinks",               
-            image_url: SERVER_URL + "/assets/images/drinks/drinks.jpg",
+            subtitle: "Enjoy Chocshakes",               
+            image_url: SERVER_URL + "/assets/images/menu2/menu2.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCSHAKES",
@@ -854,8 +862,8 @@ function sendMainMenu(recipientId){
             }]
           },{
             title: "Choctails",
-            subtitle: "Delicious Deserts",               
-            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            subtitle: "Enjoy Choctails",               
+            image_url: SERVER_URL + "/assets/images/menu3/menu3.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCTAILS",
@@ -870,9 +878,9 @@ function sendMainMenu(recipientId){
               title: "Back"
             }]
           },{
-            title: "Coffee",
-            subtitle: "Delicious Deserts",               
-            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            title: "Coffee, Tea & Frozen coffee",
+            subtitle: "Enjoy Frozen coffee",               
+            image_url: SERVER_URL + "/assets/images/menu4/menu4.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_COFFEE",
@@ -887,9 +895,9 @@ function sendMainMenu(recipientId){
               title: "Back"
             }]
           },{
-            title: "Mocktails",
-            subtitle: "Delicious Deserts",               
-            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            title: "Mocktails & Belgian Frappe",
+            subtitle: "Enjoy Mocktails & Belgian Frappes",               
+            image_url: SERVER_URL + "/assets/images/menu5/menu5.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MOCKTAILS",
@@ -904,9 +912,9 @@ function sendMainMenu(recipientId){
               title: "Back"
             }]
           },{
-            title: "Savouries",
-            subtitle: "Delicious Deserts",               
-            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            title: "Pizza, Savouries & Sandwiches",
+            subtitle: "Enjoy Pizza, Savouries",               
+            image_url: SERVER_URL + "/assets/images/menu6/menu6.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_SAVOURIES",
@@ -921,9 +929,9 @@ function sendMainMenu(recipientId){
               title: "Back"
             }]
           },{
-            title: "Chocizza",
-            subtitle: "Delicious Deserts",               
-            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            title: "Chocizza, Pastries & Deserts",
+            subtitle: "Enjoy Chocizza, Pastries",               
+            image_url: SERVER_URL + "/assets/images/menu7/menu7.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCIZZA",
@@ -939,8 +947,8 @@ function sendMainMenu(recipientId){
             }]
           },{
             title: "Sundaes",
-            subtitle: "Delicious Deserts",               
-            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            subtitle: "Enjoy Sundaes",               
+            image_url: SERVER_URL + "/assets/images/menu8/menu8.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_SUNDAES",
@@ -956,28 +964,11 @@ function sendMainMenu(recipientId){
             }]
           },{
             title: "Chocolate Fondue",
-            subtitle: "Delicious Deserts",               
-            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            subtitle: "Enjoy Chocolate Fondue",               
+            image_url: SERVER_URL + "/assets/images/menu9/menu9.jpg",
             buttons: [{
               type: "postback",
               payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_FONDUE",
-              title: "Explore"
-            },{
-              type:"phone_number",
-              title:"Call",
-              payload:"+919930822203"
-            },{
-              type: "postback",
-              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
-              title: "Back"
-            }]
-          },{
-            title: "Frozen Coffee",
-            subtitle: "Delicious Deserts",               
-            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
-            buttons: [{
-              type: "postback",
-              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_FROZEN",
               title: "Explore"
             },{
               type:"phone_number",
@@ -1117,85 +1108,22 @@ function sendTypingOn(recipientId) {
   callSendAPI(messageData);
 }
 
-function showItemTemplate(recipientId,menuText){
-
-  var itemMenuArray;
-
-  switch(menuText){
-    case 'italian':
-    itemMenuArray = items.italian;
-    break;
-    case 'chocshakes':
-    itemMenuArray = items.chocshakes;
-    break;
-    case 'choctails':
-    itemMenuArray = items.choctails;
-    break;
-    case 'coffee':
-    itemMenuArray = items.coffee;
-    break;
-    case 'mocktails':
-    itemMenuArray = items.mocktails;
-    break;
-    case 'savouries':
-    itemMenuArray = items.savouries;
-    break;
-    case 'chocizza':
-    itemMenuArray = items.chocizza;
-    break;
-    case 'sundaes':
-    itemMenuArray = items.sundaes;
-    break;
-    case 'fondue':
-    itemMenuArray = items.fondue;
-    break;
-    case 'frozen':
-    itemMenuArray = items.frozen;
-    break;
-  }
-
+function sendImageMessage(recipientId,imgUrl) {
   var messageData = {
     recipient: {
       id: recipientId
     },
-    message: {        
-      attachment:{
-        type:"template",
-        payload:{
-          template_type:"generic",
-          elements:getItemsJson(itemMenuArray)
-        }    
+    message: {
+      attachment: {
+        type: "image",
+        payload: {
+          url: 
+        }
       }
     }
   };
-  
-  //console.log("elements json: " + JSON.stringify(messageData));
-  callSendAPI(messageData);
-}
 
-function getItemsJson(itemMenuArray){
-  var elements = [];
-  var i;
-  for (i in itemMenuArray) {
-    var singleElement = {
-        title:itemMenuArray[i].title,
-        image_url:itemMenuArray[i].image_url,
-        subtitle:itemMenuArray[i].subtitle,
-        buttons:[{
-        type: "postback",
-        payload: itemMenuArray[i].payload_review,
-        title: "Reviews"
-        },{
-        type: "postback",
-        payload: itemMenuArray[i].payload_back,
-        title: "Back"
-        }          
-      ]      
-    };
-    elements.push(singleElement); 
-  }
-  //return elements;
-  return JSON.stringify(elements);
+  callSendAPI(messageData);
 }
 
 function showMenu(recipientId){
