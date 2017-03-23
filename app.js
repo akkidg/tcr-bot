@@ -1,0 +1,1260 @@
+/*
+ * Copyright 2016-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
+
+/* jshint node: true, devel: true */
+'use strict';
+
+const 
+  bodyParser = require('body-parser'),
+  config = require('config'),
+  crypto = require('crypto'),
+  express = require('express'),
+  https = require('https'),  
+  request = require('request'),
+  firebase  = require('firebase');
+
+  var app = express();
+  app.set('port', process.env.PORT || 5000);
+  app.set('view engine', 'ejs');
+  app.use(bodyParser.json({ verify: verifyRequestSignature }));
+  app.use(express.static('public'));
+
+  // Firebase Var Initialisation
+
+  const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
+  const FIREBASE_AUTH_DOMAIN = process.env.FIREBASE_AUTH_DOMAIN;
+  const FIREBASE_DB_URL = process.env.FIREBASE_DB_URL;
+  const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET;
+
+  var firebaseConfig = {
+    apiKey: FIREBASE_API_KEY,
+    authDomain: FIREBASE_AUTH_DOMAIN,
+    databaseURL: FIREBASE_DB_URL,
+    storageBucket: FIREBASE_STORAGE_BUCKET,
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+  var database = firebase.database();
+
+  var firstName = "";
+
+  // Time Delay variable
+  var delayMills = 1000;
+  var reviewCounter = 0;
+
+  /*
+    App Constants
+  */
+
+  // App Secret can be retrieved from the App Dashboard
+  const APP_SECRET = (process.env.MESSENGER_APP_SECRET) ? 
+    process.env.MESSENGER_APP_SECRET :
+    config.get('appSecret');
+
+  // Arbitrary value used to validate a webhook
+  const VALIDATION_TOKEN = (process.env.MESSENGER_VALIDATION_TOKEN) ?
+    (process.env.MESSENGER_VALIDATION_TOKEN) :
+    config.get('validationToken');
+
+  // Generate a page access token for your page from the App Dashboard
+  const PAGE_ACCESS_TOKEN = (process.env.MESSENGER_PAGE_ACCESS_TOKEN) ?
+    (process.env.MESSENGER_PAGE_ACCESS_TOKEN) :
+    config.get('pageAccessToken');
+
+  // URL where the app is running (include protocol). Used to point to scripts and 
+  // assets located at this address. 
+  const SERVER_URL = (process.env.SERVER_URL) ?
+    (process.env.SERVER_URL) :
+    config.get('serverURL');
+
+  /*
+  * Menu, Reviews, MenuItems Array Declaration
+  */  
+
+  var reviews = [
+    "Abhay Shingi\nSmall little cosy place to indulge in your chocolate fantasy. The owner is really sweet and heart warming person making sure you are having a good time here.",
+    "Prajakta Gosavi\nThis is my favorite burger place though its famous for chocolate. The chocolate shot are a must try too. Place is small. Rates are a bit high comparatively. But once you taste the food here its worth it.",
+    "Rashmi Munot\nThe best hub for chocolate lovers ; The Chocolate Room tops my list . Amazing sandwiches and pizzas , and all the chocolate delicacies are mouth watering.",
+    "Jay Aher\nThe chocolate just melts in the mouth...just a chocolicious experience...couldn't ask for more...keep going...loved it...just meant for chocolate lovers❤❤"  
+  ];
+
+  var items = {
+    "italian":[
+    {"title":"Classic","image_url":SERVER_URL + "/assets/images/food11/food11.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Mint","image_url":SERVER_URL + "/assets/images/food11/food12.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Hazelnut","image_url":SERVER_URL + "/assets/images/food11/food13.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Tiramisu","image_url":SERVER_URL + "/assets/images/food11/food14.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Torroncino","image_url":SERVER_URL + "/assets/images/food11/food14.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Caramel","image_url":SERVER_URL + "/assets/images/food11/food14.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Dark","image_url":SERVER_URL + "/assets/images/food11/food14.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Belgian Chilli Chocolate","image_url":SERVER_URL + "/assets/images/food11/food14.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Hot Chocolate with Crunchy Magic Balls","image_url":SERVER_URL + "/assets/images/food11/food14.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Hot Chocolate with Marshmallows","image_url":SERVER_URL + "/assets/images/food11/food14.jpg","subtitle":"Cuddle cup - 109, Warming Mug - 159","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}  
+    ],
+    "chocshakes":[
+    {"title":"Kit kat shake","image_url":SERVER_URL + "/assets/images/food21/food21.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Oreo cookie shake","image_url":SERVER_URL + "/assets/images/food21/food22.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Black forest shake","image_url":SERVER_URL + "/assets/images/food21/food23.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Toblerone shake","image_url":SERVER_URL + "/assets/images/food21/food23.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Cookie & creame shake","image_url":SERVER_URL + "/assets/images/food21/food23.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Dutch truffle cake shake","image_url":SERVER_URL + "/assets/images/food21/food23.jpg","subtitle":"189/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Snicker bar shake","image_url":SERVER_URL + "/assets/images/food21/food23.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Mars bar shake","image_url":SERVER_URL + "/assets/images/food21/food23.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"M & M shake","image_url":SERVER_URL + "/assets/images/food21/food23.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"TCR's in house shake","image_url":SERVER_URL + "/assets/images/food21/food23.jpg","subtitle":"229/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
+    ],
+    "choctails":[
+    {"title":"Classic chocolate granite","image_url":SERVER_URL + "/assets/images/food31/food31.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Mint split latte","image_url":SERVER_URL + "/assets/images/food31/food32.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Hazelnut granite","image_url":SERVER_URL + "/assets/images/food31/food33.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Tiramisu choctail","image_url":SERVER_URL + "/assets/images/food31/food33.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Caramel frappe","image_url":SERVER_URL + "/assets/images/food31/food33.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"White choctail","image_url":SERVER_URL + "/assets/images/food31/food33.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Dark choctail","image_url":SERVER_URL + "/assets/images/food31/food33.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Coffee nirvana","image_url":SERVER_URL + "/assets/images/food31/food33.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Torroncino shake","image_url":SERVER_URL + "/assets/images/food31/food33.jpg","subtitle":"169/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
+    ],
+    "coffee":[
+    {"title":"Espresso coffee","image_url":SERVER_URL + "/assets/images/drink11/drink11.jpg","subtitle":"49/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Long black","image_url":SERVER_URL + "/assets/images/drink11/drink12.jpg","subtitle":"69/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Macchiato","image_url":SERVER_URL + "/assets/images/drink11/drink13.jpg","subtitle":"89/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Coppuccino","image_url":SERVER_URL + "/assets/images/drink11/drink14.jpg","subtitle":"89/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Latte","image_url":SERVER_URL + "/assets/images/drink11/drink14.jpg","subtitle":"89/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Caramel Macchiato","image_url":SERVER_URL + "/assets/images/drink11/drink14.jpg","subtitle":"99/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Cafe mocha","image_url":SERVER_URL + "/assets/images/drink11/drink14.jpg","subtitle":"109/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Cookie crumble","image_url":SERVER_URL + "/assets/images/drink11/drink14.jpg","subtitle":"109/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Hazelnut delight","image_url":SERVER_URL + "/assets/images/drink11/drink14.jpg","subtitle":"109/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Mugguccino","image_url":SERVER_URL + "/assets/images/drink11/drink14.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}  
+    ],
+    "mocktails":[
+    {"title":"Cremosinas/Soda","image_url":SERVER_URL + "/assets/images/drink21/drink21.jpg","subtitle":"109/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Granita","image_url":SERVER_URL + "/assets/images/drink21/drink22.jpg","subtitle":"109/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Mojito","image_url":SERVER_URL + "/assets/images/drink21/drink23.jpg","subtitle":"109/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Iced Tea","image_url":SERVER_URL + "/assets/images/drink21/drink23.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
+    {"title":"Fruit Frappers","image_url":SERVER_URL + "/assets/images/drink21/drink23.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
+    ],
+    "savouries":[
+    {"title":"French fries","image_url":SERVER_URL + "/assets/images/drink31/drink31.jpg","subtitle":"89/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Masala fries","image_url":SERVER_URL + "/assets/images/drink31/drink32.jpg","subtitle":"99/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Potato Wedges","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"99/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Veg Burger","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"99/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Corn N Chilli garlic bread","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Cheesy garlic bread","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
+    ],
+    "chocizza":[
+    {"title":"Choc-Date pizza","image_url":SERVER_URL + "/assets/images/drink31/drink31.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Hi fibre pizza","image_url":SERVER_URL + "/assets/images/drink31/drink32.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Rocky road pizza","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Banana marshmallow chocizza","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Choco ecstassy surprise","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
+    ],
+    "sundaes":[
+    {"title":"Choc-Fudge","image_url":SERVER_URL + "/assets/images/drink31/drink31.jpg","subtitle":"139/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Chocolate molten pudding sundae","image_url":SERVER_URL + "/assets/images/drink31/drink32.jpg","subtitle":"149/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Chocolate lava java","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"179/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Chocolate rocher sundae","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"179/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Mousse made of pure chocolate","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Chocolate chocolate sundae","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Mt. Brownie","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"199/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Chocolate mess","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"229/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Chocolate avalanche","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"239/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
+    ],
+    "fondue":[
+    {"title":"Chocolate Fondue: Dark/White/Milk","image_url":SERVER_URL + "/assets/images/drink31/drink31.jpg","subtitle":"349/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Cheese Fondue","image_url":SERVER_URL + "/assets/images/drink31/drink32.jpg","subtitle":"399/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    ],
+    "frozen":[
+    {"title":"Iced/Diet coffee","image_url":SERVER_URL + "/assets/images/drink31/drink31.jpg","subtitle":"99/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Iced Coppuccino","image_url":SERVER_URL + "/assets/images/drink31/drink32.jpg","subtitle":"99/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Iced cafe americano","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"99/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Coffee frappe","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"109/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Irish coffee","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Almond coffee","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Triple sec coffee","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Tcr's coffee","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"},
+    {"title":"Iced Caramel Macchiato","image_url":SERVER_URL + "/assets/images/drink31/drink33.jpg","subtitle":"129/-","default_action_url":"https://www.zomato.com/hyderabad/chilis-banjara-hills","payload_back":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU","payload_review":"DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW"}
+    ]
+  }
+
+  var serviceHighlights = "Our Service Highlights\n- Home Delivery\n- Full Bar Available\n- Live Music\n- Smoking Area\n- Wifi\n- Live Sports Screening\n- Valet Parking Available\n- Featured in Collection\n- Happy hours";
+  var testimonials = "Awesome restaurant and great food with warm service!\nCuisines\nDesserts, Cafe, Fast Food";
+  var knowFor = "Known For\nSignature Margaritas, American portions and music";
+
+/*
+ * Be sure to setup your config values before running this code. You can 
+ * set them using environment variables or modifying the config file in /config.
+ *
+ */
+
+if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN && SERVER_URL)) {
+  console.error("Missing config values");
+  process.exit(1);
+}
+
+console.log("validation token " + VALIDATION_TOKEN + " PAGE_ACCESS_TOKEN : " + PAGE_ACCESS_TOKEN);
+
+/*
+ * Use your own validation token. Check that the token used in the Webhook 
+ * setup is the same token used here.
+ *
+ */
+app.get('/webhook', function(req, res) {
+  if (req.query['hub.mode'] === 'subscribe' &&
+      req.query['hub.verify_token'] === VALIDATION_TOKEN) {
+    console.log("Validating webhook");
+    res.status(200).send(req.query['hub.challenge']);
+  } else {
+    console.error("Failed validation. Make sure the validation tokens match.");
+    res.sendStatus(403);          
+  }  
+});
+
+/*
+ * All callbacks for Messenger are POST-ed. They will be sent to the same
+ * webhook. Be sure to subscribe your app to your page to receive callbacks
+ * for your page. 
+ * https://developers.facebook.com/docs/messenger-platform/product-overview/setup#subscribe_app
+ *
+ */
+app.post('/webhook', function (req, res) {
+  var data = req.body;
+
+  // Make sure this is a page subscription
+  if (data.object == 'page') {
+    // Iterate over each entry
+    // There may be multiple if batched
+    data.entry.forEach(function(pageEntry) {
+      var pageID = pageEntry.id;
+      var timeOfEvent = pageEntry.time;
+
+      // Iterate over each messaging event
+      pageEntry.messaging.forEach(function(messagingEvent) {
+        if (messagingEvent.optin) {
+          receivedAuthentication(messagingEvent);
+        } else if (messagingEvent.message) {
+          receivedMessage(messagingEvent);
+        } else if (messagingEvent.delivery) {
+          receivedDeliveryConfirmation(messagingEvent);
+        } else if (messagingEvent.postback) {
+          receivedPostback(messagingEvent);
+        } else if (messagingEvent.read) {
+          receivedMessageRead(messagingEvent);
+        } else if (messagingEvent.account_linking) {
+          receivedAccountLink(messagingEvent);
+        } else {
+          console.log("Webhook received unknown messagingEvent: ", messagingEvent);
+        }
+      });
+    });
+
+    // Assume all went well.
+    //
+    // You must send back a 200, within 20 seconds, to let us know you've 
+    // successfully received the callback. Otherwise, the request will time out.
+    res.sendStatus(200);
+  }
+});
+
+/*
+ * This path is used for account linking. The account linking call-to-action
+ * (sendAccountLinking) is pointed to this URL. 
+ * 
+ */
+app.get('/authorize', function(req, res) {
+  var accountLinkingToken = req.query.account_linking_token;
+  var redirectURI = req.query.redirect_uri;
+
+  // Authorization Code should be generated per user by the developer. This will 
+  // be passed to the Account Linking callback.
+  var authCode = "1234567890";
+
+  // Redirect users to this URI on successful login
+  var redirectURISuccess = redirectURI + "&authorization_code=" + authCode;
+
+  res.render('authorize', {
+    accountLinkingToken: accountLinkingToken,
+    redirectURI: redirectURI,
+    redirectURISuccess: redirectURISuccess
+  });
+});
+
+/*
+ * Verify that the callback came from Facebook. Using the App Secret from 
+ * the App Dashboard, we can verify the signature that is sent with each 
+ * callback in the x-hub-signature field, located in the header.
+ *
+ * https://developers.facebook.com/docs/graph-api/webhooks#setup
+ *
+ */
+function verifyRequestSignature(req, res, buf) {
+  var signature = req.headers["x-hub-signature"];
+
+  if (!signature) {
+    // For testing, let's log an error. In production, you should throw an 
+    // error.
+    console.error("Couldn't validate the signature.");
+  } else {
+    var elements = signature.split('=');
+    var method = elements[0];
+    var signatureHash = elements[1];
+
+    var expectedHash = crypto.createHmac('sha1', APP_SECRET)
+                        .update(buf)
+                        .digest('hex');
+
+    if (signatureHash != expectedHash) {
+      throw new Error("Couldn't validate the request signature.");
+    }
+  }
+}
+
+/*
+ * Authorization Event
+ *
+ * The value for 'optin.ref' is defined in the entry point. For the "Send to 
+ * Messenger" plugin, it is the 'data-ref' field. Read more at 
+ * https://developers.facebook.com/docs/messenger-platform/webhook-reference/authentication
+ *
+ */
+function receivedAuthentication(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfAuth = event.timestamp;
+
+  // The 'ref' field is set in the 'Send to Messenger' plugin, in the 'data-ref'
+  // The developer can set this to an arbitrary value to associate the 
+  // authentication callback with the 'Send to Messenger' click event. This is
+  // a way to do account linking when the user clicks the 'Send to Messenger' 
+  // plugin.
+  var passThroughParam = event.optin.ref;
+
+  console.log("Received authentication for user %d and page %d with pass " +
+    "through param '%s' at %d", senderID, recipientID, passThroughParam, 
+    timeOfAuth);
+
+  // When an authentication is received, we'll send a message back to the sender
+  // to let them know it was successful.
+  sendTextMessage(senderID, "Authentication successful");
+}
+
+/*
+ * Message Event
+ *
+ * This event is called when a message is sent to your page. The 'message' 
+ * object format can vary depending on the kind of message that was received.
+ * Read more at https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received
+ *
+ * For this example, we're going to echo any text that we get. If we get some 
+ * special keywords ('button', 'generic', 'receipt'), then we'll send back
+ * examples of those bubbles to illustrate the special message bubbles we've 
+ * created. If we receive a message with an attachment (image, video, audio), 
+ * then we'll simply confirm that we've received the attachment.
+ * 
+ */
+function receivedMessage(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfMessage = event.timestamp;
+  var message = event.message;
+
+  console.log("Received message for user %d and page %d at %d with message:", 
+    senderID, recipientID, timeOfMessage);
+  console.log(JSON.stringify(message));
+
+  var isEcho = message.is_echo;
+  var messageId = message.mid;
+  var appId = message.app_id;
+  var metadata = message.metadata;
+
+  // You may get a text or attachment but not both
+  var messageText = message.text;
+  var messageAttachments = message.attachments;
+  var quickReply = message.quick_reply;
+
+  if (isEcho) {
+    // Just logging message echoes to console
+    console.log("Received echo for message %s and app %d with metadata %s", 
+      messageId, appId, metadata);
+    return;
+  } else if (quickReply) {
+    var quickReplyPayload = quickReply.payload;
+    console.log("Quick reply for message %s with payload %s",
+      messageId, quickReplyPayload);
+
+    receivedQuickReplyPostback(event);
+    return;
+  }
+
+  if (messageText) {
+    messageText = messageText.toLowerCase();
+    console.log("swith case text: " + messageText);
+    // If we receive a text message, check to see if it matches any special
+    // keywords and send back the corresponding example. Otherwise, just echo
+    // the text we received.
+    switch (messageText) {    
+
+      case 'menu':
+        sendTypingOn(senderID);
+        sendMainMenu(senderID);
+      break;       
+
+      case 'opening hours':
+        sendTypingOn(senderID);
+        sendOpeningHoursText(senderID);
+      break;   
+
+      case 'hours':
+        sendTypingOn(senderID);
+        sendOpeningHoursText(senderID);
+      break;
+
+      case 'gallery':
+        /*sendTypingOn(senderID);
+        showGallery(senderID);*/
+      break;
+
+      case 'testimonials':
+        sendTypingOn(senderID);
+        showTestimonials(senderID);
+      break;
+
+      case 'reviews':
+        sendTypingOn(senderID);
+        showReviews(senderID);
+      break;      
+
+      case 'review':
+        sendTypingOn(senderID);
+        showReviews(senderID);
+      break;
+
+      case 'hungry':
+        
+      break;
+
+      case 'book table':
+        sendTypingOn(senderID);
+        showAskContactTemplate(senderID);
+      break;
+
+      case 'book a table':
+        sendTypingOn(senderID);
+        showAskContactTemplate(senderID);
+      break;
+
+      case 'food':
+        sendTypingOn(senderID);
+        showSubMenu(senderID,"food");
+      break;
+
+      case 'drinks':
+        sendTypingOn(senderID);
+        showSubMenu(senderID,"drinks");
+      break;
+
+      case 'deserts':
+        sendTypingOn(senderID); 
+        showSubMenu(senderID,"deserts");
+      break; 
+
+      case 'location':
+        sendTypingOn(senderID);
+        sendLocationTemplate(senderID);
+      break;
+
+      case 'our location':
+        sendTypingOn(senderID);
+        sendLocationTemplate(senderID);
+      break;
+
+      default:
+        sendTypingOn(senderID);
+        sendWelcomeMessage(senderID);
+
+        setTimeout(function(){    
+            showTextTemplate(senderID,"Hi, We'r happy to see u back..");
+          },delayMills);     
+    }
+  } else if (messageAttachments) {
+    sendTypingOn(senderID);
+    sendWelcomeMessage(senderID);
+    /*setTimeout(function(){    
+      sendQuickReplySpecial(senderID);
+    },delayMills);*/
+  }
+}
+
+/*
+ * Delivery Confirmation Event
+ *
+ * This event is sent to confirm the delivery of a message. Read more about 
+ * these fields at https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-delivered
+ *
+ */
+function receivedDeliveryConfirmation(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var delivery = event.delivery;
+  var messageIDs = delivery.mids;
+  var watermark = delivery.watermark;
+  var sequenceNumber = delivery.seq;
+
+  if (messageIDs) {
+    messageIDs.forEach(function(messageID) {
+      console.log("Received delivery confirmation for message ID: %s", 
+        messageID);
+    });
+  }
+
+  console.log("All message before %d were delivered.", watermark);
+}
+
+/*
+ * Quick Reply Postback Event
+ *
+ * This event is called when a postback is tapped on a Quick Reply. 
+ * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
+ * 
+ */
+
+function receivedQuickReplyPostback(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfPostback = event.timestamp;
+  var message = event.message;
+
+  // The 'payload' param is a developer-defined field which is set in a postback 
+  // button for Structured Messages. 
+  var quickReply = message.quick_reply;
+  var payload = quickReply.payload;
+
+  console.log("Received postback for user %d and page %d with payload '%s' " + 
+    "at %d", senderID, recipientID, payload, timeOfPostback);
+
+   if (payload) {
+    // If we receive a text payload, check to see if it matches any special
+    switch (payload) {
+        case 'DEVELOPER_DEFINED_PAYLOAD_REVIEWS':
+          sendTypingOn(senderID);
+          showReviews(senderID);
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_TESTIMONALS':
+          sendTypingOn(senderID);
+          showTestimonials(senderID);
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_START_OVER':
+          sendTypingOn(senderID);
+          sendWelcomeMessage(senderID);
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MENU':
+          sendTypingOn(senderID);
+          sendMainMenu(senderID);
+        break;
+        default:
+        sendTypingOn(senderID);
+        sendWelcomeMessage(senderID);
+    }
+  }else if(user != null){
+    if(user.isOrderInProgress)
+      showOrderContinuationForm(user.fbId);
+    return;
+  }else{
+    sendTypingOn(senderID);
+    sendWelcomeMessage(senderID);
+  }
+}
+
+/*
+ * Postback Event
+ *
+ * This event is called when a postback is tapped on a Structured Message. 
+ * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
+ * 
+ */
+function receivedPostback(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+  var timeOfPostback = event.timestamp;
+
+  // The 'payload' param is a developer-defined field which is set in a postback 
+  // button for Structured Messages. 
+  var payload = event.postback.payload;
+
+  console.log("Received postback for user %d and page %d with payload '%s' " + 
+    "at %d", senderID, recipientID, payload, timeOfPostback);
+
+   if (payload) {
+    // If we receive a text payload, check to see if it matches any special
+    switch (payload) {
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MENU':
+          sendTypingOn(senderID);
+          sendMainMenu(senderID);
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_LOCATION':
+          sendTypingOn(senderID);
+          sendLocationTemplate(senderID);
+/*
+          setTimeout(function(){    
+            sendQuickReplySpecial(senderID);
+          },delayMills);*/
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_OPENING_HOURS':
+          sendTypingOn(senderID);
+          sendOpeningHoursText(senderID);
+
+          /*setTimeout(function(){    
+            sendQuickReplySpecial(senderID);
+          },delayMills);*/
+          break;
+        case 'GET_STARTED_BUTTON_PAYLOAD':
+          console.log("Received postback for get started button");
+
+          //sendTypingOn(senderID);
+
+          getUserInfo(senderID,function(){
+            if(firstName != ""){              
+
+              var greetText = "Hello " + user.firstName + ", Welcome to Chili's Bar & Cafe"
+
+              showTextTemplate(user.fbId,greetText);
+              setTimeout(function(){
+                sendWelcomeMessage(user.fbId);
+              },delayMills);
+            }else{
+               sendWelcomeMessage(senderID); 
+            }
+          });          
+        break;        
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK':        
+          sendTypingOn(senderID);
+          sendWelcomeMessage(senderID);
+        break;        
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW':
+          sendTypingOn(senderID);
+          var x = Math.floor((Math.random() * 4) + 0);
+          showTextTemplate(senderID,reviews[x]);
+          setTimeout(function(){                
+            sendQuickRepliesActions(senderID);
+          },delayMills);
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_ITALIAN':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"italian");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCSHAKES':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"chocshakes");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCTAILS':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"choctails");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_COFFEE':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"coffee");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MOCKTAILS':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"mocktails");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_SAVOURIES':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"savouries");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCIZZA':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"chocizza");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_SUNDAES':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"sundaes");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_FONDUE':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"fondue");
+        break;
+        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_FROZEN':
+          sendTypingOn(senderID);
+          showItemTemplate(senderID,"frozen");
+        break;
+        default:
+        sendTypingOn(senderID);
+        sendWelcomeMessage(senderID);
+    }
+   }else{
+        sendTypingOn(senderID);
+        sendWelcomeMessage(senderID);
+   }
+}
+
+/*
+ * Message Read Event
+ *
+ * This event is called when a previously-sent message has been read.
+ * https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-read
+ * 
+ */
+function receivedMessageRead(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+
+  // All messages before watermark (a timestamp) or sequence have been seen.
+  var watermark = event.read.watermark;
+  var sequenceNumber = event.read.seq;
+
+  console.log("Received message read event for watermark %d and sequence " +
+    "number %d", watermark, sequenceNumber);
+}
+
+/*
+ * Account Link Event
+ *
+ * This event is called when the Link Account or UnLink Account action has been
+ * tapped.
+ * https://developers.facebook.com/docs/messenger-platform/webhook-reference/account-linking
+ * 
+ */
+function receivedAccountLink(event) {
+  var senderID = event.sender.id;
+  var recipientID = event.recipient.id;
+
+  var status = event.account_linking.status;
+  var authCode = event.account_linking.authorization_code;
+
+  console.log("Received account link event with for user %d with status %s " +
+    "and auth code %s ", senderID, status, authCode);
+}
+
+var getUserInfo = function (recipientId,callback) {
+  var uri = 'https://graph.facebook.com/v2.6/' + recipientId;
+  request({
+    uri: uri,
+    qs: { access_token: PAGE_ACCESS_TOKEN },
+    method: 'GET'
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      console.log("user profile body : " + body);
+      var jsonObject =  JSON.parse(body);
+      firstName = jsonObject.first_name;
+      saveUserToFirebase(recipientId,firstName,jsonObject.last_name);      
+      callback();
+    } else {
+      firstName = "";
+      callback();
+      console.error("Failed calling User Profile API", response.statusCode, response.statusMessage, body.error);
+    }
+  });  
+};
+
+function saveUserToFirebase(recipientId,firstName,last_name){
+  database.ref('users/' + recipientId).set({
+    userId : recipientId,
+    firstName : firstName,
+    lastName : last_name
+  });
+}
+/*
+ * Send a text message using the Send API.
+ *
+ */
+function sendWelcomeMessage(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {        
+      attachment:{
+        type:"template",
+        payload:{
+          template_type:"generic",
+          elements:[
+             {
+              title:"Welcome to The Chocolate Room",
+              image_url:SERVER_URL + "/assets/images/chillis.jpg",
+              subtitle:"Try Desserts and Bakes",              
+              buttons:[
+                {
+                  type:"postback",
+                  title:"Menu",
+                  payload:"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU"
+                },
+                {
+                  type:"postback",
+                  title:"Our Location",
+                  payload:"DEVELOPER_DEFINED_PAYLOAD_FOR_LOCATION"
+                },
+                {
+                    type:"postback",
+                    title:"Opening Hours",
+                    payload:"DEVELOPER_DEFINED_PAYLOAD_FOR_OPENING_HOURS"
+                }          
+              ]      
+            }
+          ]
+        }    
+      }
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+// This send main menu
+function sendMainMenu(recipientId){
+
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {        
+      attachment:{
+        type: "template",
+        payload: {
+          template_type: "generic",
+          elements: [{
+            title: "Italian Hot Chocolates",
+            subtitle: "Tasty Crispy Food",               
+            image_url: SERVER_URL + "/assets/images/food/food.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_ITALIAN",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Chocshakes",
+            subtitle: "Chilled Drinks",               
+            image_url: SERVER_URL + "/assets/images/drinks/drinks.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCSHAKES",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Choctails",
+            subtitle: "Delicious Deserts",               
+            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCTAILS",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Coffee",
+            subtitle: "Delicious Deserts",               
+            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_COFFEE",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Mocktails",
+            subtitle: "Delicious Deserts",               
+            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MOCKTAILS",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Savouries",
+            subtitle: "Delicious Deserts",               
+            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_SAVOURIES",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Chocizza",
+            subtitle: "Delicious Deserts",               
+            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCIZZA",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Sundaes",
+            subtitle: "Delicious Deserts",               
+            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_SUNDAES",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Chocolate Fondue",
+            subtitle: "Delicious Deserts",               
+            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_FONDUE",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          },{
+            title: "Frozen Coffee",
+            subtitle: "Delicious Deserts",               
+            image_url: SERVER_URL + "/assets/images/deserts/deserts.jpg",
+            buttons: [{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_FROZEN",
+              title: "Explore"
+            },{
+              type:"phone_number",
+              title:"Call",
+              payload:"+919930822203"
+            },{
+              type: "postback",
+              payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK",
+              title: "Back"
+            }]
+          }]
+        }
+      }
+    }    
+  };
+
+  callSendAPI(messageData);
+}
+
+function sendLocationTemplate(recipientId){
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment:{
+        type:"template",
+        payload:{
+          template_type: "generic",
+          elements:[
+          {
+            title:"Chili's Bar & Cafe",
+            image_url:"https://maps.googleapis.com/maps/api/staticmap?center=20.006512,73.754632&markers=color:red%7Clabel:C%7C20.00627,73.7533445&zoom=16&size=600x400&key=AIzaSyBJqqGGwS1HthhCLL1HC8F5AcUeMu6eQVs",
+            item_url:"https://www.google.co.in/maps/place/The+Chocolate+Room/@20.006512,73.754632,15z/data=!4m5!3m4!1s0x0:0x56b0f519ace92a27!8m2!3d20.006512!4d73.754632"    
+          }
+          ]
+        }
+      }
+    }
+  };   
+  callSendAPI(messageData);
+}
+
+function sendOpeningHoursText(recipientId){
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },message:{
+      text:"Cafe Hours\n11 AM to 10.30 PM"
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function sendQuickRepliesActions(recipientId){
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: "Get Connected...",
+      quick_replies: [        
+        {
+          "content_type":"text",
+          "title":"Menu",
+          "payload":"DEVELOPER_DEFINED_PAYLOAD_FOR_MENU"
+        },
+        {
+          "content_type":"text",
+          "title":"Start Over",
+          "payload":"DEVELOPER_DEFINED_PAYLOAD_START_OVER"
+        }
+      ]
+    }
+  };
+  callSendAPI(messageData);
+}
+
+function showTestimonials(recipientId){
+  var testimonialsText = testimonials + "\n\n" + serviceHighlights + "\n\n" + knowFor;
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },message:{
+      text:testimonialsText
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function showReviews(recipientId){
+  console.log("reviews length :" + reviews.length);
+  while(reviewCounter < reviews.length){
+    var messageData = {
+      recipient: {
+        id: recipientId
+      },message:{
+        text:reviews[reviewCounter]
+      }
+    };
+    callSendAPI(messageData);
+    console.log("msg" + reviewCounter + " msgis " + reviews[reviewCounter]);
+    reviewCounter++;
+  }
+
+  reviewCounter = 0;
+}
+
+function showTextTemplate(recipientId,msgText){
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },message:{
+      text:msgText
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+/*
+ * Turn typing indicator on
+ *
+ */
+function sendTypingOn(recipientId) {
+  console.log("Turning typing indicator on");
+
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    sender_action: "typing_on"
+  };
+
+  callSendAPI(messageData);
+}
+
+function showItemTemplate(recipientId,menuText){
+
+  var itemMenuArray;
+
+  switch(menuText){
+    case 'italian':
+    itemMenuArray = items.italian;
+    break;
+    case 'chocshakes':
+    itemMenuArray = items.chocshakes;
+    break;
+    case 'choctails':
+    itemMenuArray = items.choctails;
+    break;
+    case 'coffee':
+    itemMenuArray = items.coffee;
+    break;
+    case 'mocktails':
+    itemMenuArray = items.mocktails;
+    break;
+    case 'savouries':
+    itemMenuArray = items.savouries;
+    break;
+    case 'chocizza':
+    itemMenuArray = items.chocizza;
+    break;
+    case 'sundaes':
+    itemMenuArray = items.sundaes;
+    break;
+    case 'fondue':
+    itemMenuArray = items.fondue;
+    break;
+    case 'frozen':
+    itemMenuArray = items.frozen;
+    break;
+  }
+
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {        
+      attachment:{
+        type:"template",
+        payload:{
+          template_type:"generic",
+          elements:getItemsJson(itemMenuArray)
+        }    
+      }
+    }
+  };
+  
+  //console.log("elements json: " + JSON.stringify(messageData));
+  callSendAPI(messageData);
+}
+
+function getItemsJson(itemMenuArray){
+  var elements = [];
+  var i;
+  for (i in itemMenuArray) {
+    var singleElement = {
+        title:itemMenuArray[i].title,
+        image_url:itemMenuArray[i].image_url,
+        subtitle:itemMenuArray[i].subtitle,
+        buttons:[{
+        type: "postback",
+        payload: itemMenuArray[i].payload_review,
+        title: "Reviews"
+        },{
+        type: "postback",
+        payload: itemMenuArray[i].payload_back,
+        title: "Back"
+        }          
+      ]      
+    };
+    elements.push(singleElement); 
+  }
+  //return elements;
+  return JSON.stringify(elements);
+}
+
+function showMenu(recipientId){
+  setTimeout(function(){    
+            sendTypingOn(recipientId);
+            sendMainMenu(recipientId);
+          },delayMills);
+}
+
+function getUserData(){
+  var userRef = database.ref('/users');
+  userRef.once('value',function(snapshot){
+    snapshot.forEach(function(childsnapshot){
+      var userid = childsnapshot.val().userId;
+      var firstName = childsnapshot.val().firstName;
+      console.log("user: " + userid + "," + firstName);
+      //console.log("user: " + childsnapshot.val());
+    });
+  });
+}
+
+/*
+ * Call the Send API. The message data goes in the body. If successful, we'll 
+ * get the message id in a response 
+ *
+ */
+function callSendAPI(messageData) {
+  request({
+    uri: 'https://graph.facebook.com/v2.6/me/messages',
+    qs: { access_token: PAGE_ACCESS_TOKEN },
+    method: 'POST',
+    json: messageData
+
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      var recipientId = body.recipient_id;
+      var messageId = body.message_id;
+
+      if (messageId) {
+        console.log("Successfully sent message with id %s to recipient %s", 
+          messageId, recipientId);
+      } else {
+      console.log("Successfully called Send API for recipient %s", 
+        recipientId);
+      }
+    } else {
+      console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
+    }
+  });  
+}
+
+// Start server
+// Webhooks must be available via SSL with a certificate signed by a valid 
+// certificate authority.
+app.listen(app.get('port'), function() {
+  //startHourlyBradcast();
+  console.log('Node app is running on port', app.get('port'));
+});
+
+module.exports = app;
+
+
