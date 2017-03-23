@@ -411,71 +411,30 @@ function receivedMessage(event) {
     // keywords and send back the corresponding example. Otherwise, just echo
     // the text we received.
     switch (messageText) {    
-
       case 'menu':
         sendTypingOn(senderID);
         sendMainMenu(senderID);
       break;       
-
       case 'opening hours':
         sendTypingOn(senderID);
         sendOpeningHoursText(senderID);
       break;   
-
       case 'hours':
         sendTypingOn(senderID);
         sendOpeningHoursText(senderID);
       break;
-
-      case 'gallery':
-        /*sendTypingOn(senderID);
-        showGallery(senderID);*/
-      break;
-
       case 'testimonials':
         sendTypingOn(senderID);
         showTestimonials(senderID);
       break;
-
       case 'reviews':
         sendTypingOn(senderID);
         showReviews(senderID);
       break;      
-
       case 'review':
         sendTypingOn(senderID);
         showReviews(senderID);
       break;
-
-      case 'hungry':
-        
-      break;
-
-      case 'book table':
-        sendTypingOn(senderID);
-        showAskContactTemplate(senderID);
-      break;
-
-      case 'book a table':
-        sendTypingOn(senderID);
-        showAskContactTemplate(senderID);
-      break;
-
-      case 'food':
-        sendTypingOn(senderID);
-        showSubMenu(senderID,"food");
-      break;
-
-      case 'drinks':
-        sendTypingOn(senderID);
-        showSubMenu(senderID,"drinks");
-      break;
-
-      case 'deserts':
-        sendTypingOn(senderID); 
-        showSubMenu(senderID,"deserts");
-      break; 
-
       case 'location':
         sendTypingOn(senderID);
         sendLocationTemplate(senderID);
