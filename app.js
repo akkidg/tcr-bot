@@ -86,15 +86,15 @@ const
   ];
 
   var menuImages = [
-    {"image_url":SERVER_URL + "/assets/images/menu1/menu1.jpg"},
-    {"image_url":SERVER_URL + "/assets/images/menu2/menu2.jpg"},
-    {"image_url":SERVER_URL + "/assets/images/menu3/menu3.jpg"},
-    {"image_url":SERVER_URL + "/assets/images/menu4/menu4.jpg"},
-    {"image_url":SERVER_URL + "/assets/images/menu5/menu5.jpg"},
-    {"image_url":SERVER_URL + "/assets/images/menu6/menu6.jpg"},
-    {"image_url":SERVER_URL + "/assets/images/menu7/menu7.jpg"},
-    {"image_url":SERVER_URL + "/assets/images/menu9/menu9.jpg"},
-    {"image_url":SERVER_URL + "/assets/images/menu9/menu9.jpg"}
+    SERVER_URL + "/assets/images/menu1/menu11.jpg",
+    SERVER_URL + "/assets/images/menu2/menu2.jpg",
+    SERVER_URL + "/assets/images/menu3/menu3.jpg",
+    SERVER_URL + "/assets/images/menu4/menu4.jpg",
+    SERVER_URL + "/assets/images/menu5/menu5.jpg",
+    SERVER_URL + "/assets/images/menu6/menu6.jpg",
+    SERVER_URL + "/assets/images/menu7/menu7.jpg",
+    SERVER_URL + "/assets/images/menu9/menu9.jpg",
+    SERVER_URL + "/assets/images/menu9/menu9.jpg"
   ];
 
   /*var items = {
