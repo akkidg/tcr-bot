@@ -670,7 +670,7 @@ function receivedPostback(event) {
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_COFFEE':
           sendTypingOn(senderID);
-          sendImageMessage(senderID,menuImages[3);
+          sendImageMessage(senderID,menuImages[3]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MOCKTAILS':
           sendTypingOn(senderID);
@@ -1117,7 +1117,7 @@ function sendImageMessage(recipientId,imgUrl) {
       attachment: {
         type: "image",
         payload: {
-          url: 
+          url: imgUrl
         }
       }
     }
