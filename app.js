@@ -1164,7 +1164,7 @@ function showPhotos(recipientId){
     counter++;
   }
 
-  Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId),sendImageAttachemet(3,tempIndexArray[2],recipientId)])
+  Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId)])
   .then(function(result){
     console.log(result);
   })
@@ -1176,12 +1176,50 @@ function showPhotos(recipientId){
 
 function sendImageAttachemet(index,imgIndex,recipientId){
   return new Promise(function(resolve,reject){
-    sendImageMessage(recipientId,images[imgIndex]);
+
+    showTextTemplate(recipientId,'Photo ' + index);
+
     setTimeout(function(){
-      showTextTemplate(recipientId,'Photo ' + index);
-      resolve('attachment sent successfully');
-    },delayMills);
-  });
+      var messageData = {
+        recipient: {
+          id: recipientId
+        },
+        message: {
+          attachment: {
+            type: "image",
+            payload: {
+              url: imgUrl
+            }
+          }
+        }
+      };
+
+      request({
+        uri: 'https://graph.facebook.com/v2.6/me/messages',
+        qs: { access_token: PAGE_ACCESS_TOKEN },
+        method: 'POST',
+        json: messageData
+
+        }, function (error, response, body) {
+          if (!error && response.statusCode == 200) {
+            var recipientId = body.recipient_id;
+            var messageId = body.message_id;
+
+            if (messageId) {
+              console.log("Successfully sent message with id %s to recipient %s", 
+                messageId, recipientId);
+            } else {
+            console.log("Successfully called Send API for recipient %s", 
+              recipientId);
+            }
+          } else {
+            console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
+          }
+
+        });
+          resolve('attachment sent successfully');
+        },delayMills);
+      });
 }
 
 /*
