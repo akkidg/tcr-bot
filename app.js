@@ -1194,24 +1194,28 @@ function textTemp(recipientId,msgText){
 
 function sendImageAttachemet(index,imgIndex,recipientId){
   new Promise(function(resolve,reject){
-        textTemp(recipientId,'Photos ' + index);
+        textTemp(recipientId,'Photos ' + index)
+        ,function(data){
+          var messageData = {
+            recipient: {
+              id: recipientId
+            },
+            message: {
+              attachment: {
+                type: "image",
+                payload: {
+                  url: images[imgIndex]
+                }
+              }
+            }
+          };
+          console.log('image block');
+          return resolve('image called');
+        }
   }).then(function(data){
     console.log(data);
-    var messageData = {
-      recipient: {
-        id: recipientId
-      },
-      message: {
-        attachment: {
-          type: "image",
-          payload: {
-            url: images[imgIndex]
-          }
-        }
-      }
-    };
+    
     console.log('image block');
-    return resolve('yesss');
   });
 }
 
