@@ -1166,7 +1166,7 @@ function showPhotos(recipientId){
     counter++;
   }
 
-  /*cnt = 0;
+  /*var cnt = 0;
   while(cnt < tempIndexArray.length){
 
     showTextTemplate(recipientId,'Photo ' + (cnt + 1));
@@ -1208,8 +1208,8 @@ function showPhotos(recipientId){
           }          
           cnt++;
         });
-        },delayMills);*/
-  }
+        },delayMills);
+    }*/
 
  /* Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId)])
   .then(function(result){
