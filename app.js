@@ -49,6 +49,44 @@ const
   var delayMills = 1000;
   var reviewCounter = 0;
 
+  var specialWords = ['location','located','reviews','review','photo','photos'];
+
+  var images = [
+    'https://b.zmtcdn.com/data/pictures/2/1600222/a6729204721ae5119b82db3b806f8fa7.jpg',
+    'https://b.zmtcdn.com/data/pictures/2/1600222/898675fe6f3c388fda4d49ee445fda2f.jpg',
+    'https://b.zmtcdn.com/data/pictures/chains/2/1600222/1797d9d2bbf2f47b636bd0ec436c82c4.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/246/46a8e1a27f7886cc37013135fd310246_1488455154.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/ed0/1f6a9832e191bd9c356b4cc3b8333ed0_1486206060.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/cc1/87791a69c64e3b31c259af164e730cc1_1483162448.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/02b/ab70ccc531c0b312e920b39a1a73702b_1485409387.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/25d/f432a7cec64c943b086b41c6d269825d_1483162346.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/119/440e8a0a94389499dda34e7052768119_1483017224.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/80e/4ae1976d6e22b15307830f1fc83f780e_1483017225.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/eda/ee8d0bcee5fe0de7a06f1d33107c6eda_1481917647.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/134/9e6cfce523648731e8c5c4260ba72134_1482327408.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/9cc/fb15a3ea17cc2740e961ecb5bb7d49cc_1482470795.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/05a/4de2fcd6ca6a5c4dc93c7b0579baa05a_1480875055.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/728/e4095ed6052012c6d36e0268578ae728_1478194292.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/f79/6b4bfac0fce91ebc9d63457b9124df79_1478096867.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/19a/12aa70700d327e60341ba2d8c5e0719a_1473150712.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/5e5/f9afd8ab7b329938a317d83e064f45e5_1476805518.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/23f/8cb8ca1490de559a8205d41d2a3be23f_1478096866.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/932/d90d58996014c98c3c761bad08cc0932_1471597439.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/047/5761e96dd432c4b1afc673d7ab525047_1472895228.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/33d/685f2584bfaa688378038220849b233d_1471516748.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/988/5de843c5d0ae4d7d50d68e17f54b3988_1470502288.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/71e/8708a2bfd91daf96b549bec1daff771e_1471156073.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/a29/d1c756d863e4918500478bf733de4a29_1469888901.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/633/840c9ff3b8497fceacc3636739ca9633_1468643524.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/8e4/0bc94e9c882615764c57bc74cc01f8e4_1468733576.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/d93/1a9bbf19f7b79b845d9eec6639824d93_1468733579.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/31b/13b2563ad5e62e358eee7786162cf31b_1465739731.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/37c/c598d8bd021d8d2a699c931f0b18937c_1468643523.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/a50/e593b1b6c3e3536b8c4cca6c2b3b4a50_1467297385.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/264/7a630a09ced182963f3600007653d264_1465739743.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/827/c804c54738280cc15f6f0395a1603827_1465739736.jpg',
+    'https://b.zmtcdn.com/data/reviews_photos/fff/bee3c3ac1e6719bc93804b5c05917fff_1465739734.jpg'
+  ];
   /*
     App Constants
   */
@@ -406,6 +444,15 @@ function receivedMessage(event) {
 
   if (messageText) {
     messageText = messageText.toLowerCase();
+
+    for(var word in specialWords){
+      var n = messageText.indexOf(word);
+      if(n != -1){
+        messageText = word;
+        break;
+      }
+    }
+
     console.log("swith case text: " + messageText);
     // If we receive a text message, check to see if it matches any special
     // keywords and send back the corresponding example. Otherwise, just echo
@@ -423,10 +470,6 @@ function receivedMessage(event) {
         sendTypingOn(senderID);
         sendOpeningHoursText(senderID);
       break;
-      case 'testimonials':
-        sendTypingOn(senderID);
-        showTestimonials(senderID);
-      break;
       case 'reviews':
         sendTypingOn(senderID);
         showReviews(senderID);
@@ -439,12 +482,22 @@ function receivedMessage(event) {
         sendTypingOn(senderID);
         sendLocationTemplate(senderID);
       break;
-
       case 'our location':
         sendTypingOn(senderID);
         sendLocationTemplate(senderID);
       break;
-
+      case 'located':
+        sendTypingOn(senderID);
+        sendLocationTemplate(senderID);
+      break;
+      case 'photos':
+        sendTypingOn(senderID);
+        showPhotos(senderID);
+      break;
+      case 'photo':
+        sendTypingOn(senderID);
+        showPhotos(senderID);
+      break;
       default:
         sendTypingOn(senderID);
         sendWelcomeMessage(senderID);
@@ -515,10 +568,6 @@ function receivedQuickReplyPostback(event) {
         case 'DEVELOPER_DEFINED_PAYLOAD_REVIEWS':
           sendTypingOn(senderID);
           showReviews(senderID);
-        break;
-        case 'DEVELOPER_DEFINED_PAYLOAD_FOR_TESTIMONALS':
-          sendTypingOn(senderID);
-          showTestimonials(senderID);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_START_OVER':
           sendTypingOn(senderID);
@@ -592,7 +641,7 @@ function receivedPostback(event) {
           getUserInfo(senderID,function(){
             if(firstName != ""){              
 
-              var greetText = "Hello " + firstName + ", Welcome to The Chocolate Room"
+              var greetText = "Hello " + firstName + ", welcome to The Chocolate Room!";
 
               showTextTemplate(senderID,greetText);
               setTimeout(function(){
@@ -959,7 +1008,7 @@ function sendLocationTemplate(recipientId){
           template_type: "generic",
           elements:[
           {
-            title:"Chili's Bar & Cafe",
+            title:"The Chocolate Room",
             image_url:"https://maps.googleapis.com/maps/api/staticmap?center=20.006512,73.754632&markers=color:red%7Clabel:C%7C20.00627,73.7533445&zoom=16&size=600x400&key=AIzaSyBJqqGGwS1HthhCLL1HC8F5AcUeMu6eQVs",
             item_url:"https://www.google.co.in/maps/place/The+Chocolate+Room/@20.006512,73.754632,15z/data=!4m5!3m4!1s0x0:0x56b0f519ace92a27!8m2!3d20.006512!4d73.754632"    
           }
@@ -1102,6 +1151,21 @@ function getUserData(){
       //console.log("user: " + childsnapshot.val());
     });
   });
+}
+
+function showPhotos(recipientId){
+  var counter = 0;
+  var tempIndexArray = [];
+  while(counter < 3){
+    var num = Math.floor((Math.random() * images.length) + 0);
+    tempIndexArray[counter] = num;
+    counter++;
+  }
+
+  for(var i = 0;i<tempIndexArray.length;i++){
+    showTextTemplate(recipientId,"Photo " + (i+1));
+    sendImageMessage(recipientId,images[tempIndexArray[i]]);
+  }
 }
 
 /*
