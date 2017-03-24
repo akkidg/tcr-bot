@@ -449,7 +449,7 @@ function receivedMessage(event) {
       var n = messageText.indexOf(specialWords[i]);
       if(n != -1){
         messageText = specialWords[i];
-        console.log("what is msgtext : " + msgtext);
+        console.log("what is msgtext : " + messageText);
         break;
       }
     }
