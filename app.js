@@ -1193,7 +1193,7 @@ function textTemp(recipientId,msgText){
 }
 
 function sendImageAttachemet(index,imgIndex,recipientId){
-  new Promise(function(resolve,reject){
+  return new Promise(function(resolve,reject){
         textTemp(recipientId,'Photos ' + index);
   }).then(function(data){
     var messageData = {
