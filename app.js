@@ -1193,10 +1193,11 @@ function textTemp(recipientId,msgText){
 }
 
 function sendImageAttachemet(index,imgIndex,recipientId){
-  new Promise(function(resolve,reject){
-        textTemp(recipientId,'Photos ' + index)
-        ,function(data){
-          var messageData = {
+  Promise.resolve()
+  .then(function(){
+    return textTemp(recipientId,'Photos ' + index);
+  }).then(function(data){
+    var messageData = {
             recipient: {
               id: recipientId
             },
@@ -1208,14 +1209,9 @@ function sendImageAttachemet(index,imgIndex,recipientId){
                 }
               }
             }
-          };
-          console.log('image block');
-          return resolve('image called');
-        }
-  }).then(function(data){
-    console.log(data);
-    
-    console.log('image block');
+      };
+      console.log('image block');
+      return 'something';
   });
 }
 
