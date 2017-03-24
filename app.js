@@ -1171,7 +1171,7 @@ function showPhotos(recipientId){
   }
 
    
-  Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId)])
+  Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId)])
   .then(function(data){
     console.log(data);
   })
