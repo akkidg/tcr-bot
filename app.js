@@ -445,8 +445,8 @@ function receivedMessage(event) {
   if (messageText) {
     messageText = messageText.toLowerCase();
 
-    for(var word in specialWords){
-      var n = messageText.indexOf(word);
+    for(var i; i<specialWords.length; i++){
+      var n = messageText.indexOf(specialWords[i]);
       if(n != -1){
         messageText = word;
         break;
