@@ -1193,7 +1193,7 @@ function textTemp(recipientId,msgText){
 }
 
 function sendImageAttachemet(index,imgIndex,recipientId){
-  return new Promise(function(resolve,reject){
+  var promise =  new Promise(function(resolve,reject){
         textTemp(recipientId,'Photos ' + index);
   }).then(function(data){
     var messageData = {
@@ -1211,6 +1211,8 @@ function sendImageAttachemet(index,imgIndex,recipientId){
     };
     console.log('image block');
   });
+
+  return promise;
 }
 
 /*
