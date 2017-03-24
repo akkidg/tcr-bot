@@ -52,7 +52,7 @@ const
   var delayMills = 1000;
   var reviewCounter = 0;
 
-  var specialWords = ['location','located','reviews','review','photo','photos'];
+  var specialWords = ['location','located','reviews','review','photo','photos','hours','hour'];
 
   var images = [
     'https://b.zmtcdn.com/data/pictures/2/1600222/a6729204721ae5119b82db3b806f8fa7.jpg',
@@ -471,6 +471,10 @@ function receivedMessage(event) {
         sendOpeningHoursText(senderID);
       break;   
       case 'hours':
+        sendTypingOn(senderID);
+        sendOpeningHoursText(senderID);
+      break;
+      case 'hour':
         sendTypingOn(senderID);
         sendOpeningHoursText(senderID);
       break;
