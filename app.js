@@ -645,7 +645,7 @@ function receivedPostback(event) {
           getUserInfo(senderID,function(){
             if(firstName != ""){              
 
-              var greetText = "Hello " + firstName + ", welcome to The Chocolate Room!";
+              var greetText = "Hello " + firstName + ", welcome to The Chocolate Room!\nCheck out what we have to offer by clicking any of the following menus.";
 
               showTextTemplate(senderID,greetText);
               setTimeout(function(){
