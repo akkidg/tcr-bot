@@ -1170,65 +1170,48 @@ function showPhotos(recipientId){
     counter++;
   }
 
-  /*var cnt = 0;
-  while(cnt < tempIndexArray.length){
-
-    showTextTemplate(recipientId,'Photo ' + (cnt + 1));
-
-    setTimeout(function(){
-      var messageData = {
-        recipient: {
-          id: recipientId
-        },
-        message: {
-          attachment: {
-            type: "image",
-            payload: {
-              url: images[cnt]
-            }
-          }
-        }
-      };
-
-      request({
-        uri: 'https://graph.facebook.com/v2.6/me/messages',
-        qs: { access_token: PAGE_ACCESS_TOKEN },
-        method: 'POST',
-        json: messageData
-        }, function (error, response, body) {
-          if (!error && response.statusCode == 200) {
-            var recipientId = body.recipient_id;
-            var messageId = body.message_id;
-
-            if (messageId) {
-              console.log("Successfully sent message with id %s to recipient %s", 
-                messageId, recipientId);
-            } else {
-            console.log("Successfully called Send API for recipient %s", 
-              recipientId);
-            }
-          } else {
-            console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
-          }          
-          cnt++;
-        });
-        },delayMills);
-    }*/
-
- /* Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId)])
-  .then(function(result){
-    console.log(result);
+   
+  Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId)])
+  .then(function(data){
+    console.log(data);
   })
   .catch(function(error){
-    console.log('error in promise');
-  });*/
+    console.log('error occurred');
+  });
 
+}
+
+function textTemp(recipientId,msgText){
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },message:{
+      text:msgText
+    }
+  };
+  return callSendAPI(messageData);
 }
 
 function sendImageAttachemet(index,imgIndex,recipientId){
   return new Promise(function(resolve,reject){
-    
-      });
+        return textTemp(recipientId,'Photos ' + index);
+  }).then(function(data){
+    var messageData = {
+      recipient: {
+        id: recipientId
+      },
+      message: {
+        attachment: {
+          type: "image",
+          payload: {
+            url: imgUrl
+          }
+        }
+      }
+    };
+
+    return callSendAPI(messageData);
+  });
 }
 
 /*
@@ -1258,6 +1241,7 @@ function callSendAPI(messageData) {
     } else {
       console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
     }
+    return 'message sent';
   });  
 }
 
