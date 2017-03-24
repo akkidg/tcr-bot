@@ -1214,10 +1214,9 @@ function sendImageAttachemet(index,imgIndex,recipientId){
             }
           } else {
             console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
-          }
-
-        });
+          }          
           resolve('attachment sent successfully');
+        });
         },delayMills);
       });
 }
