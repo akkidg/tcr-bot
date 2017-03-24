@@ -1194,7 +1194,7 @@ function textTemp(recipientId,msgText){
 
 function sendImageAttachemet(index,imgIndex,recipientId){
   return new Promise(function(resolve,reject){
-        return textTemp(recipientId,'Photos ' + index);
+        textTemp(recipientId,'Photos ' + index);
   }).then(function(data){
     var messageData = {
       recipient: {
