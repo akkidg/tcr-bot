@@ -46,6 +46,8 @@ const
 
   var firstName = "";
 
+  var cnt;
+
   // Time Delay variable
   var delayMills = 1000;
   var reviewCounter = 0;
@@ -1164,7 +1166,7 @@ function showPhotos(recipientId){
     counter++;
   }
 
-  var cnt = 0;
+  cnt = 0;
   while(cnt < tempIndexArray.length){
 
     showTextTemplate(recipientId,'Photo ' + (cnt + 1));
