@@ -1164,20 +1164,10 @@ function showPhotos(recipientId){
     counter++;
   }
 
-  Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId)])
-  .then(function(result){
-    console.log(result);
-  })
-  .catch(function(error){
-    console.log('error in promise');
-  });
+  var cnt = 0;
+  while(cnt < tempIndexArray.length){
 
-}
-
-function sendImageAttachemet(index,imgIndex,recipientId){
-  return new Promise(function(resolve,reject){
-
-    showTextTemplate(recipientId,'Photo ' + index);
+    showTextTemplate(recipientId,'Photo ' + (cnt + 1));
 
     setTimeout(function(){
       var messageData = {
@@ -1188,7 +1178,7 @@ function sendImageAttachemet(index,imgIndex,recipientId){
           attachment: {
             type: "image",
             payload: {
-              url: images[imgIndex]
+              url: images[cnt]
             }
           }
         }
@@ -1199,7 +1189,6 @@ function sendImageAttachemet(index,imgIndex,recipientId){
         qs: { access_token: PAGE_ACCESS_TOKEN },
         method: 'POST',
         json: messageData
-
         }, function (error, response, body) {
           if (!error && response.statusCode == 200) {
             var recipientId = body.recipient_id;
@@ -1215,9 +1204,24 @@ function sendImageAttachemet(index,imgIndex,recipientId){
           } else {
             console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
           }          
-          resolve('attachment sent successfully');
+          cnt++;
         });
         },delayMills);
+  }
+
+ /* Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId)])
+  .then(function(result){
+    console.log(result);
+  })
+  .catch(function(error){
+    console.log('error in promise');
+  });*/
+
+}
+
+function sendImageAttachemet(index,imgIndex,recipientId){
+  return new Promise(function(resolve,reject){
+    
       });
 }
 
