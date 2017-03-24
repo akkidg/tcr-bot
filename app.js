@@ -1181,7 +1181,7 @@ function showPhotos(recipientId){
 
 }
 
-function textTemp(recipientId,msgText){
+function textTemp(recipientId,msgText,callback){
   var messageData = {
     recipient: {
       id: recipientId
@@ -1204,14 +1204,16 @@ function textTemp(recipientId,msgText){
       if (messageId) {
         console.log("Successfully sent message with id %s to recipient %s", 
           messageId, recipientId);
+        callback();
       } else {
       console.log("Successfully called Send API for recipient %s", 
         recipientId);
+      callback();
       }
     } else {
       console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
+      callback();
     }
-    return 'message sent';
   });
 
 }
@@ -1219,23 +1221,49 @@ function textTemp(recipientId,msgText){
 function sendImageAttachemet(index,imgIndex,recipientId){
   Promise.resolve()
   .then(function(){
-    return textTemp(recipientId,'Photos ' + index);
+    textTemp(recipientId,'Photos ' + index,function(){
+      return 'called';
+    });
   }).then(function(data){
     var messageData = {
-            recipient: {
-              id: recipientId
-            },
-            message: {
-              attachment: {
-                type: "image",
-                payload: {
-                  url: images[imgIndex]
-                }
-              }
+        recipient: {
+          id: recipientId
+        },
+        message: {
+          attachment: {
+            type: "image",
+            payload: {
+              url: images[imgIndex]
             }
+          }
+        }
       };
-      
-      return callSendAPI(messageData);
+      request({
+    uri: 'https://graph.facebook.com/v2.6/me/messages',
+    qs: { access_token: PAGE_ACCESS_TOKEN },
+    method: 'POST',
+    json: messageData
+
+  }, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      var recipientId = body.recipient_id;
+      var messageId = body.message_id;
+
+      if (messageId) {
+        console.log("Successfully sent message with id %s to recipient %s", 
+          messageId, recipientId);
+        callback();
+      } else {
+      console.log("Successfully called Send API for recipient %s", 
+        recipientId);
+      callback();
+      }
+    } else {
+      console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
+      callback();
+    }
+  });
+
   });
 }
 
