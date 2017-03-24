@@ -1169,7 +1169,6 @@ function showPhotos(recipientId){
     tempIndexArray[counter] = num;
     counter++;
   }
-
    
   Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId)])
   .then(function(data){
@@ -1222,49 +1221,52 @@ function sendImageAttachemet(index,imgIndex,recipientId){
   Promise.resolve()
   .then(function(){
     textTemp(recipientId,'Photos ' + index,function(){
-      return 'called';
+      sendImage(recipientId,images[imgIndex],function(){
+        console.log('image sent successfully');
+        return 'completed successfully';
+      });
     });
-  }).then(function(data){
-    var messageData = {
-        recipient: {
-          id: recipientId
-        },
-        message: {
-          attachment: {
-            type: "image",
-            payload: {
-              url: images[imgIndex]
-            }
+  });
+}
+
+function sendImage(recipientId,imageUrl,callback){
+  var messageData = {
+      recipient: {
+        id: recipientId
+      },
+      message: {
+        attachment: {
+          type: "image",
+          payload: {
+            url: images[imgIndex]
           }
         }
-      };
-      request({
-    uri: 'https://graph.facebook.com/v2.6/me/messages',
-    qs: { access_token: PAGE_ACCESS_TOKEN },
-    method: 'POST',
-    json: messageData
-
-  }, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      var recipientId = body.recipient_id;
-      var messageId = body.message_id;
-
-      if (messageId) {
-        console.log("Successfully sent message with id %s to recipient %s", 
-          messageId, recipientId);
-        callback();
-      } else {
-      console.log("Successfully called Send API for recipient %s", 
-        recipientId);
-      callback();
       }
-    } else {
-      console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
-      callback();
-    }
-  });
+    };
+    request({
+      uri: 'https://graph.facebook.com/v2.6/me/messages',
+      qs: { access_token: PAGE_ACCESS_TOKEN },
+      method: 'POST',
+      json: messageData
+    }, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        var recipientId = body.recipient_id;
+        var messageId = body.message_id;
 
-  });
+        if (messageId) {
+          console.log("Successfully sent message with id %s to recipient %s", 
+            messageId, recipientId);
+          callback();
+        } else {
+        console.log("Successfully called Send API for recipient %s", 
+          recipientId);
+        callback();
+        }
+      } else {
+        console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
+        callback();
+      }
+    });
 }
 
 /*
