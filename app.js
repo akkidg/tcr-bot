@@ -17,7 +17,8 @@ const
   express = require('express'),
   https = require('https'),  
   request = require('request'),
-  firebase  = require('firebase');
+  firebase  = require('firebase'),
+  Promise = require('promise');
 
   var app = express();
   app.set('port', process.env.PORT || 5000);
@@ -1163,10 +1164,24 @@ function showPhotos(recipientId){
     counter++;
   }
 
-  for(var i = 0;i<tempIndexArray.length;i++){
-    showTextTemplate(recipientId,"Photo " + (i+1));
-    sendImageMessage(recipientId,images[tempIndexArray[i]]);
-  }
+  Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId),sendImageAttachemet(3,tempIndexArray[2]),recipientId])
+  .then(function(result){
+    console.log(result);
+  })
+  .catch(function(error){
+    console.log('error in promise');
+  });
+
+}
+
+function sendImageAttachemet(index,imgIndex,recipientId){
+  return new Promise(function(resolve,reject){
+    sendImageMessage(recipientId,images[imgIndex]);
+    setTimeout(function(){
+      showTextTemplate(recipientId,'Photo ' + index);
+      resolve('attachment sent successfully');
+    },delayMills);
+  });
 }
 
 /*
