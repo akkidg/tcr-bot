@@ -445,10 +445,11 @@ function receivedMessage(event) {
   if (messageText) {
     messageText = messageText.toLowerCase();
 
-    for(var i; i<specialWords.length; i++){
+    for(var i = 0; i<specialWords.length; i++){
       var n = messageText.indexOf(specialWords[i]);
       if(n != -1){
-        messageText = word;
+        messageText = specialWords[i];
+        console.log("what is msgtext : " + msgtext);
         break;
       }
     }
