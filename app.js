@@ -1210,8 +1210,8 @@ function sendImageAttachemet(index,imgIndex,recipientId){
               }
             }
       };
-      console.log('image block');
-      return 'something';
+      
+      return callSendAPI(messageData);
   });
 }
 
