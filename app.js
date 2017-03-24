@@ -1188,7 +1188,7 @@ function sendImageAttachemet(index,imgIndex,recipientId){
           attachment: {
             type: "image",
             payload: {
-              url: imgUrl
+              url: images[imgIndex]
             }
           }
         }
