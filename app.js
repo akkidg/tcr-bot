@@ -1191,7 +1191,7 @@ function showPhotos(recipientId){
         }  }
   }]
 
-  newsendApi(messageDataList,requestIterator(messageData,report),function(){
+  newsendApi(messageDataList,requestIterator,function(){
     console.log('done');
   });      
 
