@@ -48,6 +48,8 @@ const
 
   var cnt;
 
+  var messageDataList;
+
   // Time Delay variable
   var delayMills = 1000;
   var reviewCounter = 0;
@@ -1170,103 +1172,69 @@ function showPhotos(recipientId){
     counter++;
   }
    
-  Promise.all([sendImageAttachemet(1,tempIndexArray[0],recipientId),sendImageAttachemet(2,tempIndexArray[1],recipientId)])
-  .then(function(data){
-    console.log(data);
-  })
-  .catch(function(error){
-    console.log('error occurred');
-  });
+  messageDataList = [{recipient: { id: recipientId},
+        message:{ text:"Photo " + 1 }
+      },{recipient: {id: recipientId},
+        message: { attachment: { type: "image", payload: {url: images[tempIndexArray[0]]}
+        }  }
+        },
+      {recipient: {id: recipientId},
+        message:{text:"Photo " + 2  }
+      },{recipient: {id: recipientId},
+        message: { attachment: { type: "image", payload: {url: images[tempIndexArray[1]]}
+        }  }
+        },  
+      {recipient: {id: recipientId},
+        message:{text:"Photo " + 3}
+      },{recipient: {id: recipientId},
+        message: { attachment: {type: "image", payload: {url: images[tempIndexArray[2]]}
+        }  }
+  }]
 
-}
-
-function textTemp(recipientId,msgText,callback){
-  var messageData = {
-    recipient: {
-      id: recipientId
-    },message:{
-      text:msgText
-    }
-  };
-  
-  request({
+  newsendApi(messageDataList,function(messageData,report){
+    request({
     uri: 'https://graph.facebook.com/v2.6/me/messages',
     qs: { access_token: PAGE_ACCESS_TOKEN },
     method: 'POST',
     json: messageData
 
-  }, function (error, response, body) {
+    }, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       var recipientId = body.recipient_id;
       var messageId = body.message_id;
-
       if (messageId) {
-        console.log("Successfully sent message with id %s to recipient %s", 
-          messageId, recipientId);
-        callback();
+      console.log("Successfully sent message with id %s to recipient %s", 
+        messageId, recipientId);
+      report();
       } else {
       console.log("Successfully called Send API for recipient %s", 
-        recipientId);
-      callback();
+      recipientId);
+      report();
       }
     } else {
       console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
-      callback();
+      report();
     }
-  });
+    });
+  },function(){
+    console.log('done');
+  });      
 
 }
 
-function sendImageAttachemet(index,imgIndex,recipientId){
-  Promise.resolve()
-  .then(function(){
-    textTemp(recipientId,'Photos ' + index,function(){
-      sendImage(recipientId,images[imgIndex],function(){
-        console.log('image sent successfully');
-        return 'completed successfully';
-      });
-    });
-  });
-}
+function newsendApi(messageDataList,requestIterator,callback){
 
-function sendImage(recipientId,imageUrl,callback){
-  var messageData = {
-      recipient: {
-        id: recipientId
-      },
-      message: {
-        attachment: {
-          type: "image",
-          payload: {
-            url: images[imgIndex]
-          }
-        }
-      }
-    };
-    request({
-      uri: 'https://graph.facebook.com/v2.6/me/messages',
-      qs: { access_token: PAGE_ACCESS_TOKEN },
-      method: 'POST',
-      json: messageData
-    }, function (error, response, body) {
-      if (!error && response.statusCode == 200) {
-        var recipientId = body.recipient_id;
-        var messageId = body.message_id;
-
-        if (messageId) {
-          console.log("Successfully sent message with id %s to recipient %s", 
-            messageId, recipientId);
-          callback();
-        } else {
-        console.log("Successfully called Send API for recipient %s", 
-          recipientId);
-        callback();
-        }
-      } else {
-        console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
-        callback();
-      }
-    });
+  var compleReqCount = 0;
+  
+  function report(){
+    compleReqCount++;
+    if(compleReqCount == messageDataList.length)
+      callback();
+    else
+      requestIterator(messageDataList[compleReqCount],report);
+  }
+    
+  requestIterator(messageDataList[0],report);
 }
 
 /*
