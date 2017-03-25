@@ -1191,7 +1191,13 @@ function showPhotos(recipientId){
         }  }
   }]
 
-  newsendApi(messageDataList,function(messageData,report){
+  newsendApi(messageDataList,requestIterator(messageData,report),function(){
+    console.log('done');
+  });      
+
+}
+
+function requestIterator(messageData,report){
     request({
     uri: 'https://graph.facebook.com/v2.6/me/messages',
     qs: { access_token: PAGE_ACCESS_TOKEN },
@@ -1216,10 +1222,6 @@ function showPhotos(recipientId){
       report();
     }
     });
-  },function(){
-    console.log('done');
-  });      
-
 }
 
 function newsendApi(messageDataList,requestIterator,callback){
