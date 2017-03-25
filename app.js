@@ -465,51 +465,39 @@ function receivedMessage(event) {
     // the text we received.
     switch (messageText) {    
       case 'menu':
-        sendTypingOn(senderID);
         sendMainMenu(senderID);
       break;       
       case 'opening hours':
-        sendTypingOn(senderID);
         sendOpeningHoursText(senderID);
       break;   
       case 'hours':
-        sendTypingOn(senderID);
         sendOpeningHoursText(senderID);
       break;
       case 'hour':
-        sendTypingOn(senderID);
         sendOpeningHoursText(senderID);
       break;
       case 'reviews':
-        sendTypingOn(senderID);
         showReviews(senderID);
       break;      
       case 'review':
-        sendTypingOn(senderID);
         showReviews(senderID);
       break;
       case 'location':
-        sendTypingOn(senderID);
         sendLocationTemplate(senderID);
       break;
       case 'our location':
-        sendTypingOn(senderID);
         sendLocationTemplate(senderID);
       break;
       case 'located':
-        sendTypingOn(senderID);
         sendLocationTemplate(senderID);
       break;
       case 'photos':
-        sendTypingOn(senderID);
         showPhotos(senderID);
       break;
       case 'photo':
-        sendTypingOn(senderID);
         showPhotos(senderID);
       break;
       default:
-        sendTypingOn(senderID);
         sendWelcomeMessage(senderID);
 
         setTimeout(function(){    
@@ -517,7 +505,6 @@ function receivedMessage(event) {
           },delayMills);     
     }
   } else if (messageAttachments) {
-    sendTypingOn(senderID);
     sendWelcomeMessage(senderID);
     /*setTimeout(function(){    
       sendQuickReplySpecial(senderID);
@@ -576,27 +563,18 @@ function receivedQuickReplyPostback(event) {
     // If we receive a text payload, check to see if it matches any special
     switch (payload) {
         case 'DEVELOPER_DEFINED_PAYLOAD_REVIEWS':
-          sendTypingOn(senderID);
           showReviews(senderID);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_START_OVER':
-          sendTypingOn(senderID);
           sendWelcomeMessage(senderID);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MENU':
-          sendTypingOn(senderID);
           sendMainMenu(senderID);
         break;
         default:
-        sendTypingOn(senderID);
         sendWelcomeMessage(senderID);
     }
-  }else if(user != null){
-    if(user.isOrderInProgress)
-      showOrderContinuationForm(user.fbId);
-    return;
   }else{
-    sendTypingOn(senderID);
     sendWelcomeMessage(senderID);
   }
 }
@@ -624,11 +602,9 @@ function receivedPostback(event) {
     // If we receive a text payload, check to see if it matches any special
     switch (payload) {
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MENU':
-          sendTypingOn(senderID);
           sendMainMenu(senderID);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_LOCATION':
-          sendTypingOn(senderID);
           sendLocationTemplate(senderID);
 /*
           setTimeout(function(){    
@@ -636,7 +612,6 @@ function receivedPostback(event) {
           },delayMills);*/
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_OPENING_HOURS':
-          sendTypingOn(senderID);
           sendOpeningHoursText(senderID);
 
           /*setTimeout(function(){    
@@ -645,8 +620,6 @@ function receivedPostback(event) {
           break;
         case 'GET_STARTED_BUTTON_PAYLOAD':
           console.log("Received postback for get started button");
-
-          //sendTypingOn(senderID);
 
           getUserInfo(senderID,function(){
             if(firstName != ""){              
@@ -663,11 +636,9 @@ function receivedPostback(event) {
           });          
         break;        
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MAIN_MENU_BACK':        
-          sendTypingOn(senderID);
           sendWelcomeMessage(senderID);
         break;        
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_REVIEW':
-          sendTypingOn(senderID);
           var x = Math.floor((Math.random() * 4) + 0);
           showTextTemplate(senderID,reviews[x]);
           setTimeout(function(){                
@@ -675,47 +646,36 @@ function receivedPostback(event) {
           },delayMills);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_ITALIAN':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[0]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCSHAKES':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[1]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCTAILS':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[2]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_COFFEE':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[3]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_MOCKTAILS':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[4]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_SAVOURIES':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[5]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_CHOCIZZA':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[6]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_SUNDAES':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[7]);
         break;
         case 'DEVELOPER_DEFINED_PAYLOAD_FOR_FONDUE':
-          sendTypingOn(senderID);
           sendImageMessage(senderID,menuImages[8]);
         break;
         default:
-        sendTypingOn(senderID);
         sendWelcomeMessage(senderID);
     }
    }else{
-        sendTypingOn(senderID);
         sendWelcomeMessage(senderID);
    }
 }
@@ -835,13 +795,10 @@ function sendWelcomeMessage(recipientId) {
 // This send main menu
 function sendMainMenu(recipientId){
 
-  var messageData = {
-    recipient: {
-      id: recipientId
-    },
-    message: {        
-      attachment:{
-        type: "template",
+  var messageDataList = [{  recipient: {id: recipientId },
+    sender_action: "typing_on"  },{
+    recipient: {      id: recipientId    },
+    message: {  attachment:{ type: "template",
         payload: {
           template_type: "generic",
           elements: [{
@@ -1001,13 +958,21 @@ function sendMainMenu(recipientId){
         }
       }
     }    
-  };
+  }]
 
-  callSendAPI(messageData);
+  newSendApi(messageDataList,function(){
+    console.log('done');
+  });
+  
 }
 
 function sendLocationTemplate(recipientId){
-  var messageData = {
+  var messageDataList = [{
+    recipient: {
+      id: recipientId
+    },
+    sender_action: "typing_on"
+  },{
     recipient: {
       id: recipientId
     },
@@ -1026,20 +991,30 @@ function sendLocationTemplate(recipientId){
         }
       }
     }
-  };   
-  callSendAPI(messageData);
+  }]   
+
+  newSendApi(messageDataList,function(){
+    console.log('done');
+  });
 }
 
 function sendOpeningHoursText(recipientId){
-  var messageData = {
+  var messageDataList = [{
+    recipient: {
+      id: recipientId
+    },
+    sender_action: "typing_on"
+  },{
     recipient: {
       id: recipientId
     },message:{
       text:"Cafe Hours\n11 AM to 10.30 PM"
     }
-  };
+  }]
 
-  callSendAPI(messageData);
+  newSendApi(messageDataList,function(){
+    console.log('done');
+  });
 }
 
 function sendQuickRepliesActions(recipientId){
@@ -1063,19 +1038,6 @@ function sendQuickRepliesActions(recipientId){
       ]
     }
   };
-  callSendAPI(messageData);
-}
-
-function showTestimonials(recipientId){
-  var testimonialsText = testimonials + "\n\n" + serviceHighlights + "\n\n" + knowFor;
-  var messageData = {
-    recipient: {
-      id: recipientId
-    },message:{
-      text:testimonialsText
-    }
-  };
-
   callSendAPI(messageData);
 }
 
@@ -1113,25 +1075,13 @@ function showTextTemplate(recipientId,msgText){
   callSendAPI(messageData);
 }
 
-/*
- * Turn typing indicator on
- *
- */
-function sendTypingOn(recipientId) {
-  console.log("Turning typing indicator on");
-
-  var messageData = {
+function sendImageMessage(recipientId,imgUrl) {
+  var messageDataList = [{
     recipient: {
       id: recipientId
     },
     sender_action: "typing_on"
-  };
-
-  callSendAPI(messageData);
-}
-
-function sendImageMessage(recipientId,imgUrl) {
-  var messageData = {
+  },{
     recipient: {
       id: recipientId
     },
@@ -1143,16 +1093,11 @@ function sendImageMessage(recipientId,imgUrl) {
         }
       }
     }
-  };
+  }]
 
-  callSendAPI(messageData);
-}
-
-function showMenu(recipientId){
-  setTimeout(function(){    
-            sendTypingOn(recipientId);
-            sendMainMenu(recipientId);
-          },delayMills);
+  newSendApi(messageDataList,function(){
+    console.log('done');
+  });
 }
 
 function getUserData(){
