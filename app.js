@@ -54,7 +54,7 @@ const
   var delayMills = 1000;
   var reviewCounter = 0;
 
-  var specialWords = ['location','located','reviews','review','photo','photos','hours','hour'];
+  var specialWords = ['location','located','reviews','review','photo','photos','hours','hour','menu'];
 
   var images = [
     'https://b.zmtcdn.com/data/pictures/2/1600222/a6729204721ae5119b82db3b806f8fa7.jpg',
