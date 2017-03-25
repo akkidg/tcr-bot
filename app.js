@@ -1081,6 +1081,7 @@ function showTestimonials(recipientId){
 
 function showReviews(recipientId){
   console.log("reviews length :" + reviews.length);
+  var messageDataList = [];
   while(reviewCounter < reviews.length){
     var messageData = {
       recipient: {
@@ -1089,10 +1090,13 @@ function showReviews(recipientId){
         text:reviews[reviewCounter]
       }
     };
-    callSendAPI(messageData);
-    console.log("msg" + reviewCounter + " msgis " + reviews[reviewCounter]);
+    messageDataList.push(messageData);
     reviewCounter++;
   }
+
+  newSendApi(messageDataList,function(){
+    console.log('done');
+  });
 
   reviewCounter = 0;
 }
@@ -1191,7 +1195,7 @@ function showPhotos(recipientId){
         }  }
   }]
 
-  newsendApi(messageDataList,function(){
+  newSendApi(messageDataList,function(){
     console.log('done');
   });      
 
@@ -1224,7 +1228,7 @@ function requestIterator(messageData,report){
     });
 }
 
-function newsendApi(messageDataList,callback){
+function newSendApi(messageDataList,callback){
 
   var compleReqCount = 0;
   
