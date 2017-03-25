@@ -1191,7 +1191,7 @@ function showPhotos(recipientId){
         }  }
   }]
 
-  newsendApi(messageDataList,requestIterator,function(){
+  newsendApi(messageDataList,function(){
     console.log('done');
   });      
 
@@ -1224,7 +1224,7 @@ function requestIterator(messageData,report){
     });
 }
 
-function newsendApi(messageDataList,requestIterator,callback){
+function newsendApi(messageDataList,callback){
 
   var compleReqCount = 0;
   
